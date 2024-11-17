@@ -3,7 +3,27 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
 app = Flask(__name__)
+chatbot = pipeline("conversational", model="microsoft/DialoGPT-medium")
 
+@app.route('/')
+def index():
+    return render_template('index.html')  # Serve the frontend HTML
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    user_input = request.json.get('user_input')
+    if not user_input:
+        return jsonify({'error': 'No input provided'}), 400
+
+    # Get chatbot response
+    response = chatbot(user_input)
+    bot_response = response[0]['generated_text']
+
+    return jsonify({'response': bot_response})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+    
 # Load the pre-trained model and tokenizer (DialoGPT-small for efficiency)
 model_name = "microsoft/DialoGPT-small"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
